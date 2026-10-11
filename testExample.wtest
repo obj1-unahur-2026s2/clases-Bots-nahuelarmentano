@@ -1,9 +1,46 @@
-import example.pepita
+import example.*
 
-describe "group of tests for pepita" {
+describe "Test para el bot benito" {
 
-  test "pepita has initial energy" {
-    assert.equals(100, pepita.energy())
+  test "Benito detecta un tweet prohibido" {
+    benito.responder("Raul", ["hola", "mundo", "tengo", "una", "bomba"])
+    assert.equals(1, policia.registros().size())
   }
+
+  test "Benito detecta un tweet permitido" {
+    benito.responder("Jorge", ["hola", "mundo", "tengo", "una", "materia", "aprobada"])
+    assert.equals(0, policia.registros().size())
+  }
+}
+
+describe "test bot de publicidad detecta palabra clave" {
+  test "botDePizza detecta un tweet con la palabra clave pizza"{
+  const botDePizza = new BotDePublicidad(palabraClave = "pizza", mensaje = "compra nuestra fabulosa pizza tripe cuadruple cheese", link = "www.pizzamegacheese.com")
+  botDePizza.responder("Raul", ["como", "me", "comeria", "una", "pizza", "hoy"])
+  assert.equals(1, pdpwitter.tweets().size())
+  }
+
+  test "botDePizza no detecta un tweet con la palabra clave pizza"{
+  const botDePizza = new BotDePublicidad(palabraClave = "pizza", mensaje = "compra nuestra fabulosa pizza tripe cuadruple cheese", link = "www.pizzamegacheese.com")
+  botDePizza.responder("Jorge", ["que", "hambre", "tengo", "hoy"])
+  assert.equals(0, pdpwitter.tweets().size())
+  }
+
+}
+
+describe "test de bot recolector de datos" {
+  test "un bot que guarda datos, registra un tweet en la base correspondiente"{
+  const BotGuardaDatos = new BotRecolector()
+  BotGuardaDatos.responder("Pedro", ["que", "lindo", "dia", "hace", "hoy"])
+  assert.equals(1, BotGuardaDatos.datos().size())    
+  }
+
+  test "un bot que guarda datos, registra dos tweets en la base correspondiente"{
+  const BotGuardaDatos = new BotRecolector()
+  BotGuardaDatos.responder("Ana", ["que", "feo", "dia", "hoy"])
+  BotGuardaDatos.responder("Maria", ["por", "favor", "que", "pare", "de", "llover"])
+  assert.equals(2, BotGuardaDatos.datos().size())    
+  }
+
 
 }
