@@ -3,12 +3,12 @@ import example.*
 describe "Test para el bot benito" {
 
   test "Benito detecta un tweet prohibido" {
-    benito.responder("Raul", ["hola", "mundo", "tengo", "una", "bomba"])
+    benito.responder("raul", new Tweet(texto = ["hola", "mundo", "tengo", "una", "bomba"]))
     assert.equals(1, policia.registros().size())
   }
 
   test "Benito detecta un tweet permitido" {
-    benito.responder("Jorge", ["hola", "mundo", "tengo", "una", "materia", "aprobada"])
+    benito.responder("jorge", new Tweet(texto = ["hola", "mundo", "tengo", "una", "materia", "aprobada"]))
     assert.equals(0, policia.registros().size())
   }
 }
@@ -16,31 +16,82 @@ describe "Test para el bot benito" {
 describe "test bot de publicidad detecta palabra clave" {
   test "botDePizza detecta un tweet con la palabra clave pizza"{
   const botDePizza = new BotDePublicidad(palabraClave = "pizza", mensaje = "compra nuestra fabulosa pizza tripe cuadruple cheese", link = "www.pizzamegacheese.com")
-  botDePizza.responder("Raul", ["como", "me", "comeria", "una", "pizza", "hoy"])
+  botDePizza.responder("raul", new Tweet(texto = ["como", "me", "comeria", "una", "pizza", "hoy"]))
   assert.equals(1, pdpwitter.tweets().size())
   }
 
   test "botDePizza no detecta un tweet con la palabra clave pizza"{
   const botDePizza = new BotDePublicidad(palabraClave = "pizza", mensaje = "compra nuestra fabulosa pizza tripe cuadruple cheese", link = "www.pizzamegacheese.com")
-  botDePizza.responder("Jorge", ["que", "hambre", "tengo", "hoy"])
+  botDePizza.responder("jorge", new Tweet(texto = ["que", "hambre", "tengo", "hoy"]))
   assert.equals(0, pdpwitter.tweets().size())
   }
 
-}
+  test "botDePizza responde con imagen"{
+  const botDePizza = new BotDePublicidad(palabraClave = "pizza", mensaje = "compra nuestra fabulosa pizza tripe cuadruple cheese", link = "www.pizzamegacheese.com", imagen = new Imagen (nombre = "pizzaMegaCheese", bytes = 81554))
+  botDePizza.responder("jorge", new Tweet(texto = ["que", "hambre","de", "pizza", "tengo", "hoy"]))
+  assert.equals(81554, pdpwitter.tweets().first().pesoImagen())
+  }
 
+
+
+}
 describe "test de bot recolector de datos" {
   test "un bot que guarda datos, registra un tweet en la base correspondiente"{
   const BotGuardaDatos = new BotRecolector()
-  BotGuardaDatos.responder("Pedro", ["que", "lindo", "dia", "hace", "hoy"])
+  BotGuardaDatos.responder("pedro", new Tweet(texto = ["que", "lindo", "dia", "hace", "hoy"]))
   assert.equals(1, BotGuardaDatos.datos().size())    
   }
 
   test "un bot que guarda datos, registra dos tweets en la base correspondiente"{
   const BotGuardaDatos = new BotRecolector()
-  BotGuardaDatos.responder("Ana", ["que", "feo", "dia", "hoy"])
-  BotGuardaDatos.responder("Maria", ["por", "favor", "que", "pare", "de", "llover"])
+  BotGuardaDatos.responder("ana", new Tweet(texto = ["que", "feo", "dia", "hoy"]))
+  BotGuardaDatos.responder("maria", new Tweet(texto = ["por", "favor", "que", "pare", "de", "llover"]))
   assert.equals(2, BotGuardaDatos.datos().size())    
   }
+}
 
 
+describe "pruebas a pdpwitter" {
+
+  test "se redacta un tweet de mas de 15 palabras" {
+    assert.throwsException({
+      pdpwitter.twittear("josefa", new Tweet(texto = ["este", "tweet", "va", "a", "ser", "para", "quejarme", "de", "que", "estoy", "estudiando", "objetos", "un", "feriado", "en", "vez", "de", "dormir", "siesta"]))
+    })
+  }
+
+  test "un tweet arroba a Juan" {
+    pdpwitter.twittear("raul", new Tweet(texto = ["che", "@juan", "como", "estas", "hoy"]))
+    assert.equals(1, pdpwitter.home("juan").size())
+  }
+
+  test "se carga un tweet a la nada y otro a tomas" {
+    pdpwitter.twittear("astolfo", new Tweet(texto = ["que", "ganas", "de", "estudiar", "hoy", "che"]))
+    pdpwitter.twittear("pichi", new Tweet(texto = ["cuanto", "te", "sacaste", "en", "objetos", "1", "@tomas"]))
+    assert.equals(1, pdpwitter.tweetsALaNada().size())
+  }
+}
+
+describe "prueba con tweet con/sin imagen" {
+  test "imagen de un flyer de pizzas"{
+  const flyer = new Imagen(nombre = "pizzaQuesosa", bytes = 500)
+  assert.equals("pizzaQuesosa", flyer.nombre())
+  assert.equals(500, flyer.bytes())
+  }
+
+  test "un tweet que no contiene imagen"{
+    assert.equals("", sinImagen.nombre())
+    assert.equals(0, sinImagen.bytes())
+  }
+}
+
+describe "pruebas a tweet"{
+  test "se recibe un tweet sin imagen"{
+    const TweetUno = new Tweet(texto = ["hola", "mundo"], imagen = sinImagen)
+    assert.equals(["hola", "mundo"], TweetUno.texto())
+    assert.equals(0, TweetUno.pesoImagen())
+  }
+  test "se recibe un tweet con imagen"{
+    const tweetDos = new Tweet(texto = ["hola", "mundo"], imagen = new Imagen(nombre = "piolin.jpg", bytes = 666))
+    assert.equals(666, tweetDos.pesoImagen())
+  }
 }
